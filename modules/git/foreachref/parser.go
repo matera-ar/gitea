@@ -29,6 +29,7 @@ type Parser struct {
 // to follow the specified Format.
 func NewParser(r io.Reader, format Format) *Parser {
 	scanner := bufio.NewScanner(r)
+	scanner.Buffer(make([]byte, 0, 1024*1024), 1024*1024)
 
 	// in addition to the reference delimiter we specified in the --format,
 	// `git for-each-ref` will always add a newline after every reference.
