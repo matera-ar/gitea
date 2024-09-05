@@ -1,0 +1,43 @@
+		<div class="repo-header">
+			{{ with .Repository }}
+				<div class="flex-item tw-items-center">
+					<div class="flex-item-leading">
+						{{template "repo/icon" .}}
+					</div>
+					<div class="flex-item-main">
+						<div class="flex-item-title tw-text-18">
+							<a class="muted tw-font-normal" href="{{.Owner.HomeLink}}">{{.Owner.Name}}</a>/<a class="muted" href="{{.Owner.HomeLink}}/{{.LowerName}}">{{.Name}}</a>
+						</div>
+					</div>
+					<div class="flex-item-trailing">
+						{{if .IsArchived}}
+							<span class="ui basic label not-mobile">{{ctx.Locale.Tr "repo.desc.archived"}}</span>
+							<div class="repo-icon only-mobile" data-tooltip-content="{{ctx.Locale.Tr "repo.desc.archived"}}">{{svg "octicon-archive" 18}}</div>
+						{{end}}
+						{{if .IsPrivate}}
+							<span class="ui basic label not-mobile">{{ctx.Locale.Tr "repo.desc.private"}}</span>
+							<div class="repo-icon only-mobile" data-tooltip-content="{{ctx.Locale.Tr "repo.desc.private"}}">{{svg "octicon-lock" 18}}</div>
+						{{else}}
+							{{if .Owner.Visibility.IsPrivate}}
+								<span class="ui basic label not-mobile">{{ctx.Locale.Tr "repo.desc.internal"}}</span>
+								<div class="repo-icon only-mobile" data-tooltip-content="{{ctx.Locale.Tr "repo.desc.internal"}}">{{svg "octicon-shield-lock" 18}}</div>
+							{{end}}
+						{{end}}
+						{{if .IsTemplate}}
+							<span class="ui basic label not-mobile">{{ctx.Locale.Tr "repo.desc.template"}}</span>
+							<div class="repo-icon only-mobile" data-tooltip-content="{{ctx.Locale.Tr "repo.desc.template"}}">{{svg "octicon-repo-template" 18}}</div>
+						{{end}}
+						{{if eq .ObjectFormatName "sha256"}}
+							<span class="ui basic label">{{ctx.Locale.Tr "repo.desc.sha256"}}</span>
+						{{end}}
+					</div>
+				</div>
+			</div>
+		{{ end }}
+		{{if .PullMirror}}
+			<div class="fork-flag">
+				{{ctx.Locale.Tr "repo.mirror_from"}}
+				<a target="_blank" rel="noopener noreferrer" href="{{.PullMirror.RemoteAddress}}">{{.PullMirror.RemoteAddress}}</a>
+				{{if .PullMirror.UpdatedUnix}}{{ctx.Locale.Tr "repo.mirror_sync"}} {{TimeSinceUnix .PullMirror.UpdatedUnix ctx.Locale}}{{end}}
+			</div>
+		{{end}}
