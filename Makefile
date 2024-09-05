@@ -39,7 +39,7 @@ ACTIONLINT_PACKAGE ?= github.com/rhysd/actionlint/cmd/actionlint@v1
 GOPLS_PACKAGE ?= golang.org/x/tools/gopls@v0.17.1
 
 DOCKER_IMAGE ?= harbor-dev.matera.com/ci-cd/gitea
-DOCKER_TAG ?= latest
+DOCKER_TAG ?= latest-rootless
 DOCKER_REF := $(DOCKER_IMAGE):$(DOCKER_TAG)
 
 ifeq ($(HAS_GO), yes)
@@ -924,7 +924,7 @@ generate-manpage: ## generate manpage
 
 .PHONY: docker
 docker:
-	docker build -t $(DOCKER_REF) .
+	docker build -t $(DOCKER_REF) -f Dockerfile.rootless .
 # support also build args docker build --build-arg GITEA_VERSION=v1.2.3 --build-arg TAGS="bindata sqlite sqlite_unlock_notify"  .
 
 # This endif closes the if at the top of the file
