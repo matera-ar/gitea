@@ -39,8 +39,6 @@ ACTIONLINT_PACKAGE ?= github.com/rhysd/actionlint/cmd/actionlint@v1
 GOPLS_PACKAGE ?= golang.org/x/tools/gopls@v0.17.1
 
 DOCKER_IMAGE ?= harbor-dev.matera.com/ci-cd/gitea
-DOCKER_TAG ?= latest-rootless
-DOCKER_REF := $(DOCKER_IMAGE):$(DOCKER_TAG)
 
 ifeq ($(HAS_GO), yes)
 	CGO_EXTRA_CFLAGS := -DSQLITE_MAX_VARIABLE_NUMBER=32766
@@ -100,23 +98,28 @@ ifneq ($(GITHUB_REF_TYPE),branch)
 	VERSION ?= $(subst v,,$(GITHUB_REF_NAME))
 	GITEA_VERSION ?= $(VERSION)
 else
-	ifneq ($(GITHUB_REF_NAME),)
-		VERSION ?= $(subst release/v,,$(GITHUB_REF_NAME))-nightly
-	else
-		VERSION ?= main
-	endif
+	ifeq ($(GITHUB_REF_NAME),master) 
+		VERSION = latest
+		GITEA_VERSION = latest
+	else 
+		ifneq ($(GITHUB_REF_NAME),)
+			VERSION ?= $(subst release/v,,$(GITHUB_REF_NAME))-nightly
+		else
+			VERSION ?= master
+		endif
 
-	STORED_VERSION=$(shell cat $(STORED_VERSION_FILE) 2>/dev/null)
-	ifneq ($(STORED_VERSION),)
-		GITEA_VERSION ?= $(STORED_VERSION)
-	else
-		GITEA_VERSION ?= $(shell git describe --tags --always | sed 's/-/+/' | sed 's/^v//')
+		STORED_VERSION=$(shell cat $(STORED_VERSION_FILE) 2>/dev/null)
+		ifneq ($(STORED_VERSION),)
+			GITEA_VERSION ?= $(STORED_VERSION)
+		else
+			GITEA_VERSION ?= $(shell git describe --tags --always | sed 's/^v//')
+		endif
 	endif
 endif
 
 # if version = "main" then update version to "nightly"
-ifeq ($(VERSION),main)
-	VERSION := main-nightly
+ifeq ($(VERSION),master)
+	VERSION := latest
 endif
 
 LDFLAGS := $(LDFLAGS) -X "main.MakeVersion=$(MAKE_VERSION)" -X "main.Version=$(GITEA_VERSION)" -X "main.Tags=$(TAGS)"
@@ -192,6 +195,9 @@ TEST_MSSQL_HOST ?= mssql:1433
 TEST_MSSQL_DBNAME ?= gitea
 TEST_MSSQL_USERNAME ?= sa
 TEST_MSSQL_PASSWORD ?= MwantsaSecurePassword1
+
+DOCKER_TAG ?= $(GITEA_VERSION)-rootless
+DOCKER_REF := $(DOCKER_IMAGE):$(DOCKER_TAG)
 
 .PHONY: all
 all: build
@@ -926,6 +932,10 @@ generate-manpage: ## generate manpage
 docker:
 	docker build -t $(DOCKER_REF) -f Dockerfile.rootless .
 # support also build args docker build --build-arg GITEA_VERSION=v1.2.3 --build-arg TAGS="bindata sqlite sqlite_unlock_notify"  .
+
+.PHONY: push
+push: docker
+	docker push $(DOCKER_REF)
 
 # This endif closes the if at the top of the file
 endif
