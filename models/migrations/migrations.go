@@ -8,6 +8,7 @@ import (
 	"context"
 	"fmt"
 
+	matera_v_1_22 "code.gitea.io/gitea/models/migrations/matera/v_1_22"
 	"code.gitea.io/gitea/models/migrations/v1_10"
 	"code.gitea.io/gitea/models/migrations/v1_11"
 	"code.gitea.io/gitea/models/migrations/v1_12"
@@ -587,6 +588,13 @@ var migrations = []Migration{
 	NewMigration("Drop wrongly created table o_auth2_application", v1_22.DropWronglyCreatedTable),
 
 	// Gitea 1.22.0-rc1 ends at 299
+
+	// Start matera extra migrations
+
+	// v299 -> v300
+	NewMigration("Create jira relate issues table", matera_v_1_22.CreateJiraIssueRelatedCommitTable),
+
+	// End matera migrations
 }
 
 // GetCurrentDBVersion returns the current db version
