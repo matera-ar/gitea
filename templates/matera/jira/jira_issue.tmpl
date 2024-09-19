@@ -1,0 +1,28 @@
+{{template "base/head" .}}
+{{with .JiraIssue}}
+    {{ if .IsEmpty }}
+        <div class="empty-placeholder">
+            {{svg "octicon-git-compare" 48}}
+            <h2>Nenhum commit encontrado</h2>
+            <p>Verifique se o Ticket <a href="https://jira.matera.com/browse/{{.TicketId}}">{{.TicketId}}</a></h3> existe no Jira, se existem commits associados e/ou você tem permissão de visualização</p>
+        </div>
+    {{ else }}
+        <div role="main" aria-label="{{$.Title}}" class="page-content repository commits">
+            <div>
+                <div class="ui container">
+                    <div class="repo-header">
+                        <div class="muted tw-font-normal">
+                            <h3>Ticket: <a href="https://jira.matera.com/browse/{{.TicketId}}">{{.TicketId}}</a></h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="ui tabs divider" style="margin-top: 15px"></div>
+                {{ range $repo := .Repositories }}
+                    {{ template "matera/jira/repo" $repo }}
+                {{ end }}
+            </div>
+        </div>
+    {{ end }}
+{{ end }}
+{{template "base/paginate" .}}
+{{template "base/footer" .}}

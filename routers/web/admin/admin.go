@@ -27,6 +27,7 @@ import (
 	"code.gitea.io/gitea/services/context"
 	"code.gitea.io/gitea/services/cron"
 	"code.gitea.io/gitea/services/forms"
+	jira_issue_service "code.gitea.io/gitea/services/matera/jira"
 	release_service "code.gitea.io/gitea/services/release"
 	repo_service "code.gitea.io/gitea/services/repository"
 )
@@ -162,6 +163,19 @@ func DashboardPost(ctx *context.Context) {
 	// Run operation.
 	if form.Op != "" {
 		switch form.Op {
+
+		/** Start of matera jira integration **/
+
+		case "sync_jira_issues":
+			go func() {
+				if err := jira_issue_service.AddAllReposToSyncJiraIssuesQueue(graceful.GetManager().ShutdownContext(), ctx.Doer.ID); err != nil {
+					log.Error("AddAllReposToSyncJiraIssuesQueue: %v: %v", ctx.Doer.ID, err)
+				}
+			}()
+			ctx.Flash.Success("Sincronização de issues do Jira iniciada com sucesso")
+
+		/** End of matera jira integration **/
+
 		case "sync_repo_branches":
 			go func() {
 				if err := repo_service.AddAllRepoBranchesToSyncQueue(graceful.GetManager().ShutdownContext()); err != nil {

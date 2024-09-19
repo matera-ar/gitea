@@ -26,6 +26,7 @@ import (
 	"code.gitea.io/gitea/modules/gitrepo"
 	"code.gitea.io/gitea/modules/lfs"
 	"code.gitea.io/gitea/modules/log"
+	matera_repo_module "code.gitea.io/gitea/modules/matera/repository"
 	"code.gitea.io/gitea/modules/storage"
 	actions_service "code.gitea.io/gitea/services/actions"
 	asymkey_service "code.gitea.io/gitea/services/asymkey"
@@ -368,6 +369,14 @@ func DeleteRepositoryDirectly(ctx context.Context, doer *user_model.User, repoID
 			// go on
 		}
 	}
+
+	/** Start of matera jira integration **/
+
+	if err := matera_repo_module.DeleteIssues(ctx, repo); err != nil {
+		log.Error("remove jira issues from repo %d: %v", repo.ID, err)
+	}
+
+	/** End of matera jira integration **/
 
 	return nil
 }

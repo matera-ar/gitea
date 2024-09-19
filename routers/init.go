@@ -45,6 +45,7 @@ import (
 	"code.gitea.io/gitea/services/mailer"
 	mailer_incoming "code.gitea.io/gitea/services/mailer/incoming"
 	markup_service "code.gitea.io/gitea/services/markup"
+	jira_issue_service "code.gitea.io/gitea/services/matera/jira"
 	repo_migrations "code.gitea.io/gitea/services/migrations"
 	mirror_service "code.gitea.io/gitea/services/mirror"
 	"code.gitea.io/gitea/services/oauth2_provider"
@@ -151,6 +152,12 @@ func InitWebInstalled(ctx context.Context) {
 	mustInitCtx(ctx, models.Init)
 	mustInitCtx(ctx, authmodel.Init)
 	mustInitCtx(ctx, repo_service.Init)
+
+	/** Start of matera jira integration **/
+
+	mustInitCtx(ctx, jira_issue_service.Init)
+
+	/** End of matera jira integration **/
 
 	// Booting long running goroutines.
 	mustInit(indexer_service.Init)

@@ -18,6 +18,7 @@ import (
 	"code.gitea.io/gitea/modules/globallock"
 	"code.gitea.io/gitea/modules/lfs"
 	"code.gitea.io/gitea/modules/log"
+	matera_repo_module "code.gitea.io/gitea/modules/matera/repository"
 	"code.gitea.io/gitea/modules/process"
 	"code.gitea.io/gitea/modules/proxy"
 	repo_module "code.gitea.io/gitea/modules/repository"
@@ -360,6 +361,25 @@ func runSync(ctx context.Context, m *repo_model.Mirror) ([]*mirrorSyncResult, bo
 	if err = repo_module.SyncReleasesWithTags(ctx, m.Repo, gitRepo); err != nil {
 		log.Error("SyncMirrors [repo: %-v]: failed to synchronize tags to releases: %v", m.Repo, err)
 	}
+
+	if m.LFS && setting.LFS.StartServer {
+		log.Trace("SyncMirrors [repo: %-v]: syncing LFS objects...", m.Repo)
+		endpoint := lfs.DetermineEndpoint(remoteURL.String(), m.LFSEndpoint)
+		lfsClient := lfs.NewClient(endpoint, nil)
+		if err = repo_module.StoreMissingLfsObjectsInRepository(ctx, m.Repo, gitRepo, lfsClient); err != nil {
+			log.Error("SyncMirrors [repo: %-v]: failed to synchronize LFS objects for repository: %v", m.Repo, err)
+		}
+	}
+
+	/** Start matera jira issue sync **/
+
+	log.Trace("SyncMirrors [repo: %-v]: syncing jira issues...", m.Repo)
+	if err = matera_repo_module.SyncIssues(ctx, m.Repo, gitRepo); err != nil {
+		log.Error("SyncMirrors [repo: %-v]: failed to synchronize jira issues: %v", m.Repo, err)
+	}
+
+	/** End matera jira issue sync **/
+
 	gitRepo.Close()
 
 	log.Trace("SyncMirrors [repo: %-v]: updating size of repository", m.Repo)
