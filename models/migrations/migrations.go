@@ -8,6 +8,7 @@ import (
 	"context"
 	"fmt"
 
+	matera_v_1_22 "code.gitea.io/gitea/models/migrations/matera/v_1_22"
 	"code.gitea.io/gitea/models/migrations/v1_10"
 	"code.gitea.io/gitea/models/migrations/v1_11"
 	"code.gitea.io/gitea/models/migrations/v1_12"
@@ -353,6 +354,13 @@ func prepareMigrationTasks() []*migration {
 		newMigration(296, "Add missing field of commit status summary table", v1_22.AddCommitStatusSummary2),
 		newMigration(297, "Add everyone_access_mode for repo_unit", v1_22.AddRepoUnitEveryoneAccessMode),
 		newMigration(298, "Drop wrongly created table o_auth2_application", v1_22.DropWronglyCreatedTable),
+
+		// Start matera extra migrations
+
+		// v299 -> v300
+		newMigration(299, "Create jira relate issues table", matera_v_1_22.CreateJiraIssueRelatedCommitTable),
+
+		// End matera migrations
 
 		// Gitea 1.22.0-rc1 ends at migration ID number 298 (database version 299)
 

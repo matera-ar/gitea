@@ -25,6 +25,7 @@ import (
 	"code.gitea.io/gitea/modules/timeutil"
 	"code.gitea.io/gitea/modules/util"
 	issue_service "code.gitea.io/gitea/services/issue"
+	matera_issue_service "code.gitea.io/gitea/services/matera/jira"
 	notify_service "code.gitea.io/gitea/services/notify"
 	pull_service "code.gitea.io/gitea/services/pull"
 )
@@ -311,6 +312,18 @@ func pushUpdates(optsList []*repo_module.PushUpdateOptions) error {
 	if err := repo_model.UpdateRepositoryUpdatedTime(ctx, repo.ID, time.Now()); err != nil {
 		return fmt.Errorf("UpdateRepositoryUpdatedTime: %w", err)
 	}
+
+	/** Start of matera jira integration **/
+
+	/**
+	 * Toda vez que faz um push, manda uma msg pra fila de sync. Não é o algoritmo mais otimizado. Porém resolve o problema
+	 *
+	 * Como esse caso não é tão importante (gitea é basicamente read-only e DR), por enquanto vai ficar assim
+	 */
+
+	matera_issue_service.AddRepoToSyncJiraIssuesQueue(repo.ID, 0)
+
+	/** End of matera jira integration **/
 
 	return nil
 }

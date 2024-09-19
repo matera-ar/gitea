@@ -1,0 +1,82 @@
+{{$commitRepoLink := $.Repository.FullName}}
+
+<div class="flex-item tw-items-center">
+    <div class="ui attached table segment commit-table">
+        <table class="ui very basic striped table unstackable">
+            <thead>
+                <tr>
+                    <th class="three wide">{{ctx.Locale.Tr "repo.commits.author"}}</th>
+                    <th class="two wide sha">{{StringUtils.ToUpper $.Repository.ObjectFormatName}}</th>
+                    <th class="eight wide message">{{ctx.Locale.Tr "repo.commits.message"}}</th>
+                    <th class="two wide right aligned">{{ctx.Locale.Tr "repo.commits.date"}}</th>
+                    <th class="one wide"></th>
+                </tr>
+            </thead>
+            <tbody class="commit-list">
+                {{range .Commits}}
+                    <tr>
+                        <td class="author">
+                            <div class="tw-flex">
+                                {{$userName := .Author.Name}}
+                                {{if .User}}
+                                    {{if and .User.FullName DefaultShowFullName}}
+                                        {{$userName = .User.FullName}}
+                                    {{end}}
+                                    {{ctx.AvatarUtils.Avatar .User 28 "tw-mr-2"}}<a class="muted author-wrapper" href="{{.User.HomeLink}}">{{$userName}}</a>
+                                {{else}}
+                                    {{ctx.AvatarUtils.AvatarByEmail .Author.Email .Author.Name 28 "tw-mr-2"}}
+                                    <span class="author-wrapper">{{$userName}}</span>
+                                {{end}}
+                            </div>
+                        </td>
+                        <td class="sha">
+                            {{$class := "ui sha label"}}
+                            {{if .Signature}}
+                                {{$class = (print $class " isSigned")}}
+                                {{if .Verification.Verified}}
+                                    {{if eq .Verification.TrustStatus "trusted"}}
+                                        {{$class = (print $class " isVerified")}}
+                                    {{else if eq .Verification.TrustStatus "untrusted"}}
+                                        {{$class = (print $class " isVerifiedUntrusted")}}
+                                    {{else}}
+                                        {{$class = (print $class " isVerifiedUnmatched")}}
+                                    {{end}}
+                                {{else if .Verification.Warning}}
+                                    {{$class = (print $class " isWarning")}}
+                                {{end}}
+                            {{end}}
+                            {{$commitShaLink := (printf "/%s/commit/%s" $commitRepoLink (PathEscape .ID.String))}}
+                            <a {{if $commitShaLink}}href="{{$commitShaLink}}"{{end}} class="{{$class}}">
+                                <span class="shortsha">{{ShortSha .ID.String}}</span>
+                                {{if .Signature}}{{template "repo/shabox_badge" dict "root" $ "verification" .Verification}}{{end}}
+                            </a>
+                        </td>
+                        <td class="message">
+    						<span class="message-wrapper">
+	            				{{$commitLink:= printf "/%s/commit/%s" $commitRepoLink (PathEscape .ID.String)}}
+                                <span class="commit-summary {{if gt .ParentCount 1}} grey text{{end}}" title="{{.Summary}}">{{RenderCommitMessageLinkSubject nil .Message $commitLink ($.Repository.ComposeMetas ctx)}}</span>
+						    </span>
+                            {{if IsMultilineCommitMessage .Message}}
+        						<button class="ui button js-toggle-commit-body ellipsis-button" aria-expanded="false">...</button>
+                            {{end}}
+    						{{template "repo/commit_statuses" dict "Status" .Status "Statuses" .Statuses}}
+                            {{if IsMultilineCommitMessage .Message}}
+                                <pre class="commit-body tw-hidden">{{RenderCommitBody ctx .Message ($.Repository.ComposeMetas ctx)}}</pre>
+                            {{end}}
+	    				</td>
+                        {{if .Committer}}
+						    <td class="text right aligned">{{TimeSince .Committer.When ctx.Locale}}</td>
+					    {{else}}
+						    <td class="text right aligned">{{TimeSince .Author.When ctx.Locale}}</td>
+					    {{end}}
+    					<td class="text right aligned tw-py-0">
+	    					<button class="btn interact-bg tw-p-2" data-tooltip-content="{{ctx.Locale.Tr "copy_hash"}}" data-clipboard-text="{{.ID}}">{{svg "octicon-copy"}}</button>
+                            {{$viewCommitLink := printf "/%s/src/commit/%s" $commitRepoLink (PathEscape .ID.String)}}
+							<a class="btn interact-bg tw-p-2" data-tooltip-content="{{ctx.Locale.Tr "repo.commits.view_path"}}" href="{{$viewCommitLink}}">{{svg "octicon-file-code"}}</a>
+						</td>
+                    </tr>
+                {{end}}
+            </tbody>
+        </table>
+    </div>
+</div>
