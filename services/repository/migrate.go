@@ -18,6 +18,7 @@ import (
 	"code.gitea.io/gitea/modules/git"
 	"code.gitea.io/gitea/modules/lfs"
 	"code.gitea.io/gitea/modules/log"
+	matera_repo_module "code.gitea.io/gitea/modules/matera/repository"
 	"code.gitea.io/gitea/modules/migration"
 	repo_module "code.gitea.io/gitea/modules/repository"
 	"code.gitea.io/gitea/modules/setting"
@@ -163,6 +164,15 @@ func MigrateRepositoryGitData(ctx context.Context, u *user_model.User,
 				log.Error("Failed to synchronize tags to releases for repository: %v", err)
 			}
 		}
+
+		/** Start matera jira issue sync **/
+
+		log.Trace("SyncMirrors [repo: %-v]: syncing jira issues...", repo)
+		if err = matera_repo_module.SyncIssues(ctx, repo, gitRepo); err != nil {
+			log.Error("SyncMirrors [repo: %-v]: failed to synchronize jira issues: %v", repo, err)
+		}
+
+		/** End matera jira issue sync **/
 
 		if opts.LFS {
 			endpoint := lfs.DetermineEndpoint(opts.CloneAddr, opts.LFSEndpoint)

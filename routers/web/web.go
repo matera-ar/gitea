@@ -24,6 +24,7 @@ import (
 	"code.gitea.io/gitea/modules/web/middleware"
 	"code.gitea.io/gitea/modules/web/routing"
 	"code.gitea.io/gitea/routers/common"
+	"code.gitea.io/gitea/routers/matera/web/jira"
 	"code.gitea.io/gitea/routers/web/admin"
 	"code.gitea.io/gitea/routers/web/auth"
 	"code.gitea.io/gitea/routers/web/devtest"
@@ -1619,6 +1620,14 @@ func registerRoutes(m *web.Route) {
 		m.Any("/devtest/fetch-action-test", devtest.FetchActionTest)
 		m.Any("/devtest/{sub}", devtest.Tmpl)
 	}
+
+	/** Start of matera jira integration **/
+
+	m.Group("/jira", func() {
+		m.Get("/issues/{ticketId}/commits", jira.CommitsByJira)
+	}, reqSignIn)
+
+	/** End of matera jira integration **/
 
 	m.NotFound(func(w http.ResponseWriter, req *http.Request) {
 		ctx := context.GetWebContext(req)
