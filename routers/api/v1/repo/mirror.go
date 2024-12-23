@@ -12,6 +12,7 @@ import (
 	repo_model "code.gitea.io/gitea/models/repo"
 	"code.gitea.io/gitea/models/unit"
 	"code.gitea.io/gitea/modules/git"
+	"code.gitea.io/gitea/modules/log"
 	"code.gitea.io/gitea/modules/setting"
 	api "code.gitea.io/gitea/modules/structs"
 	"code.gitea.io/gitea/modules/util"
@@ -21,7 +22,42 @@ import (
 	"code.gitea.io/gitea/services/convert"
 	"code.gitea.io/gitea/services/migrations"
 	mirror_service "code.gitea.io/gitea/services/mirror"
+	repo_service "code.gitea.io/gitea/services/repository"
 )
+
+func Convert(ctx *context.APIContext) {
+	repo := ctx.Repo.Repository
+
+	if !ctx.Repo.CanWrite(unit.TypeCode) {
+		ctx.APIError(http.StatusForbidden, "Must have write access")
+	}
+
+	if !setting.Mirror.Enabled {
+		ctx.APIError(http.StatusBadRequest, "Mirror feature is disabled")
+		return
+	}
+
+	if _, err := repo_model.GetMirrorByRepoID(ctx, repo.ID); err != nil {
+		if errors.Is(err, repo_model.ErrMirrorNotExist) {
+			ctx.APIError(http.StatusBadRequest, "Repository is not a mirror")
+			return
+		}
+		ctx.APIError(http.StatusInternalServerError, err)
+		return
+	}
+
+	repo.IsMirror = false
+
+	if _, err := repo_service.CleanUpMigrateInfo(ctx, repo); err != nil {
+		ctx.APIErrorInternal(err)
+		return
+	} else if err = repo_model.DeleteMirrorByRepoID(ctx, ctx.Repo.Repository.ID); err != nil {
+		ctx.APIErrorInternal(err)
+		return
+	}
+	log.Trace("Repository converted from mirror to regular: %s", repo.FullName())
+	ctx.Status(http.StatusOK)
+}
 
 // MirrorSync adds a mirrored repository to the sync queue
 func MirrorSync(ctx *context.APIContext) {
