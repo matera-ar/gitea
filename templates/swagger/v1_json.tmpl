@@ -1685,6 +1685,46 @@
         }
       }
     },
+    "/orgs/{org}/rename": {
+      "post": {
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "admin"
+        ],
+        "summary": "Rename an organization",
+        "operationId": "renameOrg",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "existing name of the organization",
+            "name": "org",
+            "in": "path",
+            "required": true
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/RenameOrgOption"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "$ref": "#/responses/empty"
+          },
+          "403": {
+            "$ref": "#/responses/forbidden"
+          },
+          "422": {
+            "$ref": "#/responses/validationError"
+          }
+        }
+      }
+    },
     "/orgs/{org}/actions/runners/registration-token": {
       "get": {
         "produces": [
@@ -24204,6 +24244,22 @@
       "properties": {
         "new_username": {
           "description": "New username for this user. This name cannot be in use yet by any other user.",
+          "type": "string",
+          "uniqueItems": true,
+          "x-go-name": "NewName"
+        }
+      },
+      "x-go-package": "code.gitea.io/gitea/modules/structs"
+    },
+    "RenameOrgOption": {
+      "description": "RenameOrgOption options when renaming a user",
+      "type": "object",
+      "required": [
+        "new_username"
+      ],
+      "properties": {
+        "new_name": {
+          "description": "New name for this org. This name cannot be in use yet by any other user.",
           "type": "string",
           "uniqueItems": true,
           "x-go-name": "NewName"
